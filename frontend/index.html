@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAO Governance dApp</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+        h2 { color: #58a6ff; margin-bottom: 12px; font-size: 18px; }
+        button { background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #2ea043; }
+        button:disabled { background: #484f58; cursor: not-allowed; }
+        button.danger { background: #da3633; }
+        button.danger:hover { background: #f85149; }
+        input, select { background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 12px; border-radius: 6px; width: 100%; margin-bottom: 8px; }
+        .row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .row > * { flex: 1; }
+        .label { color: #8b949e; font-size: 12px; }
+        .value { font-size: 20px; font-weight: bold; color: #f0f6fc; word-break: break-all; }
+        .proposal { border-left: 3px solid #30363d; padding-left: 12px; margin: 8px 0; }
+        .proposal.active { border-left-color: #238636; }
+        .proposal.succeeded { border-left-color: #58a6ff; }
+        .proposal.defeated { border-left-color: #da3633; }
+        .vote-btns { display: flex; gap: 8px; margin-top: 8px; }
+        .vote-btns button { flex: 1; }
+        #status { padding: 8px; border-radius: 6px; margin-bottom: 12px; }
+        .connected { background: #0d3320; color: #3fb950; }
+        .disconnected { background: #330d0d; color: #f85149; }
+        .tx-link { color: #58a6ff; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align:center; margin-bottom:20px;">DAO Governance</h1>
+
+        <!-- Status -->
+        <div id="status" class="disconnected">Not connected</div>
+
+        <!-- Connect -->
+        <div class="card">
+            <h2>Wallet</h2>
+            <button id="connectBtn" onclick="connectWallet()">Connect MetaMask</button>
+            <p style="margin-top:8px; word-break:break-all;"><span class="label">Address:</span> <span id="walletAddress">—</span></p>
+        </div>
+
+        <!-- Token Info -->
+        <div class="card">
+            <h2>Token Info</h2>
+            <div class="row">
+                <div><span class="label">Token Balance</span><div class="value" id="tokenBalance">—</div></div>
+                <div><span class="label">Voting Power</span><div class="value" id="votingPower">—</div></div>
+            </div>
+            <p><span class="label">Current Delegate:</span> <span id="currentDelegate">—</span></p>
+        </div>
+
+        <!-- Delegate -->
+        <div class="card">
+            <h2>Delegate Votes</h2>
+            <input type="text" id="delegateAddress" placeholder="Delegate address (0x...)">
+            <div class="row">
+                <button onclick="delegateVotes()">Delegate</button>
+                <button onclick="delegateToSelf()">Delegate to Self</button>
+            </div>
+            <p id="delegateResult" style="margin-top:8px;"></p>
+        </div>
+
+        <!-- Proposals -->
+        <div class="card">
+            <h2>Proposals</h2>
+            <div class="row">
+                <input type="number" id="proposalIdInput" placeholder="Proposal ID" min="0">
+                <button onclick="loadProposal()">Load Proposal</button>
+            </div>
+            <div id="proposalList" style="margin-top:12px;">
+                <p style="color:#8b949e;">Enter proposal ID to view details</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
