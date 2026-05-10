@@ -1,6 +1,6 @@
 // Конфигурация — замени на свои адреса после деплоя
-const TOKEN_ADDRESS = '0xYOUR_TOKEN_ADDRESS';
-const GOVERNOR_ADDRESS = '0xYOUR_GOVERNOR_ADDRESS';
+const TOKEN_ADDRESS = '0xa7d3a89c21B68A413b1A4A920A095AeE3c0Bb2E6';
+const GOVERNOR_ADDRESS = '0xcf259D03EbB9390988A26fb9b77d6a1a2c5726cA';
 
 let TOKEN_ABI, GOVERNOR_ABI;
 let provider, signer, tokenContract, governorContract, userAddress;

@@ -33,25 +33,18 @@ contract TokenVesting is Ownable {
         uint256 _vestingDuration
     ) Ownable(_beneficiary) {
         require(_beneficiary != address(0), "Beneficiary cannot be zero address");
-        require(_token != address(0), "Token cannot be zero address");
         require(_vestingDuration > 0, "Duration must be > 0");
-        require(_startTimestamp >= block.timestamp, "Start must be >= current time");
+        
 
-        token = IERC20(_token);
+        token = IERC20(_token); // can be address(0) initially
         beneficiary = _beneficiary;
         start = _startTimestamp;
         cliff = _startTimestamp + _cliffDuration;
         duration = _vestingDuration;
-        
-        // Убираем проверку баланса - токены могут быть переведены позже
-    }
-
-    // Функция для инициализации токенов (вызывается один раз)
-    function initializeTokens() external {
-        require(token.balanceOf(address(this)) > 0, "No tokens allocated to vesting");
     }
 
     function totalAllocation() public view returns (uint256) {
+        if (address(token) == address(0)) return 0;
         return token.balanceOf(address(this)) + released;
     }
 
@@ -75,6 +68,7 @@ contract TokenVesting is Ownable {
     function release() external notRevoked {
         uint256 amount = releasableAmount();
         require(amount > 0, "No tokens to release");
+        require(address(token) != address(0), "Token not set");
 
         released += amount;
         token.safeTransfer(beneficiary, amount);
@@ -87,6 +81,7 @@ contract TokenVesting is Ownable {
 
         uint256 unreleased = totalAllocation() - released;
         if (unreleased > 0) {
+            require(address(token) != address(0), "Token not set");
             token.safeTransfer(owner(), unreleased);
         }
 
@@ -94,6 +89,7 @@ contract TokenVesting is Ownable {
     }
 
     function getBalance() external view returns (uint256) {
+        if (address(token) == address(0)) return 0;
         return token.balanceOf(address(this));
     }
 }

@@ -15,7 +15,6 @@ contract DeployAll is Script {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
 
-        // Адреса из .env
         address teamAddr = vm.envAddress("TEAM_ADDRESS");
         address treasuryAddr = vm.envAddress("TREASURY_ADDRESS");
         address airdropAddr = vm.envAddress("AIRDROP_ADDRESS");
@@ -23,33 +22,55 @@ contract DeployAll is Script {
 
         uint256 minDelay = 2 days;
 
+        console.log("=== Starting DAO Deployment ===");
+        console.log("Deployer:", deployer);
+        console.log("Team beneficiary:", teamAddr);
+        console.log("Min Timelock Delay:", minDelay, "seconds");
+
         vm.startBroadcast(deployerKey);
 
-        // 1. Token
-        GovernanceToken token = new GovernanceToken(teamAddr, treasuryAddr, airdropAddr, liquidityAddr);
-        console.log("GovernanceToken:", address(token));
+        // Step 1: Deploy TokenVesting first (empty)
+        console.log("\n[1/7] Deploying TokenVesting...");
+        TokenVesting vesting = new TokenVesting(teamAddr, address(0), block.timestamp, 0, 365 days);
+        console.log("  Address:", address(vesting));
 
-        // 2. Timelock
+        // Step 2: Governance Token (mint team tokens to vesting contract)
+        console.log("\n[2/7] Deploying GovernanceToken...");
+        GovernanceToken token = new GovernanceToken(
+            address(vesting),  // team tokens go to vesting
+            treasuryAddr,
+            airdropAddr,
+            liquidityAddr
+        );
+        console.log("  Address:", address(token));
+        console.log("  Total Supply:", token.totalSupply());
+
+        // Step 3: Timelock Controller
+        console.log("\n[3/7] Deploying TimelockController...");
         address[] memory proposers = new address[](1);
         address[] memory executors = new address[](1);
         TimelockController timelock = new TimelockController(minDelay, proposers, executors, deployer);
-        console.log("Timelock:", address(timelock));
+        console.log("  Address:", address(timelock));
 
-        // 3. Governor
+        // Step 4: Governor
+        console.log("\n[4/7] Deploying MyGovernor...");
         MyGovernor governor = new MyGovernor(IVotes(address(token)), timelock);
-        console.log("MyGovernor:", address(governor));
+        console.log("  Address:", address(governor));
 
-        // 4. Treasury + Box
+        // Step 5: Treasury + Box
+        console.log("\n[5/7] Deploying Treasury and Box...");
         Treasury treasury = new Treasury(deployer);
         Box box = new Box(deployer);
-        console.log("Treasury:", address(treasury));
-        console.log("Box:", address(box));
+        console.log("  Treasury:", address(treasury));
+        console.log("  Box:", address(box));
 
-        // 5. Transfer ownership to timelock
+        // Step 6: Setup permissions
+        console.log("\n[6/7] Setting up permissions...");
         treasury.transferOwnership(address(timelock));
         box.transferOwnership(address(timelock));
+        console.log("  Treasury owner -> Timelock");
+        console.log("  Box owner -> Timelock");
 
-        // 6. Grant roles to governor
         bytes32 proposerRole = timelock.PROPOSER_ROLE();
         bytes32 executorRole = timelock.EXECUTOR_ROLE();
         bytes32 cancellerRole = timelock.CANCELLER_ROLE();
@@ -57,22 +78,23 @@ contract DeployAll is Script {
         timelock.grantRole(proposerRole, address(governor));
         timelock.grantRole(executorRole, address(governor));
         timelock.grantRole(cancellerRole, address(governor));
+        console.log("  Governor -> Proposer + Executor + Canceller");
+
         timelock.renounceRole(proposerRole, deployer);
         timelock.renounceRole(executorRole, deployer);
         timelock.renounceRole(cancellerRole, deployer);
-
-        // 7. TokenVesting for team
-        TokenVesting vesting = new TokenVesting(teamAddr, address(token), block.timestamp, 0, 365 days);
-        console.log("TokenVesting:", address(vesting));
+        console.log("  Deployer -> Roles renounced");
 
         vm.stopBroadcast();
 
-        console.log("\n=== Deployed Addresses ===");
-        console.log("Token:", address(token));
-        console.log("Timelock:", address(timelock));
-        console.log("Governor:", address(governor));
-        console.log("Treasury:", address(treasury));
-        console.log("Box:", address(box));
-        console.log("Vesting:", address(vesting));
+        // Summary
+        console.log("\n=== Deployment Summary ===");
+        console.log('  "GovernanceToken": "', address(token), '",');
+        console.log('  "TimelockController": "', address(timelock), '",');
+        console.log('  "MyGovernor": "', address(governor), '",');
+        console.log('  "Treasury": "', address(treasury), '",');
+        console.log('  "Box": "', address(box), '",');
+        console.log('  "TokenVesting": "', address(vesting), '"');
+        console.log("\n  Team tokens vesting balance:", token.balanceOf(address(vesting)));
     }
 }

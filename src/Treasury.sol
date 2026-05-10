@@ -8,15 +8,22 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract Treasury is Ownable {
     using SafeERC20 for IERC20;
 
-    constructor(address _owner) Ownable(_owner) {}
+    event ERC20Withdrawn(address indexed token, address indexed to, uint256 amount);
+    event ETHWithdrawn(address indexed to, uint256 amount);
+
+    constructor(address initialOwner) Ownable(initialOwner) {}
 
     receive() external payable {}
 
-    function withdrawERC20(address _token, address _to, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(_to, _amount);
+    function withdrawERC20(address tokenAddr, address to, uint256 amount) external onlyOwner {
+        require(to != address(0), "Treasury: zero address");
+        IERC20(tokenAddr).safeTransfer(to, amount);
+        emit ERC20Withdrawn(tokenAddr, to, amount);
     }
 
-    function withdrawETH(address payable _to, uint256 _amount) external onlyOwner {
-        _to.transfer(_amount);
+    function withdrawETH(address payable to, uint256 amount) external onlyOwner {
+        require(to != address(0), "Treasury: zero address");
+        to.transfer(amount);
+        emit ETHWithdrawn(to, amount);
     }
 }

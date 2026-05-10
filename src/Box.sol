@@ -6,10 +6,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Box is Ownable {
     uint256 public value;
 
+    event ValueStored(uint256 newValue);
+
     constructor(address _owner) Ownable(_owner) {}
 
-    function store(uint256 _value) external onlyOwner {
-        value = _value;
+    function store(uint256 newValue) external onlyOwner {
+        value = newValue;
+        emit ValueStored(newValue);
     }
 
     function retrieve() external view returns (uint256) {
