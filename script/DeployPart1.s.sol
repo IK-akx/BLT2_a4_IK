@@ -8,7 +8,6 @@ import "../src/TokenVesting.sol";
 
 contract DeployPart1 is Script {
     function run() external {
-        // Читаем из .env
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         
         address teamAddress = vm.envAddress("TEAM_ADDRESS");
@@ -22,7 +21,6 @@ contract DeployPart1 is Script {
         console.log("Team address:", teamAddress);
         console.log("Treasury address:", treasuryAddress);
         
-        // 1. Разворачиваем GovernanceToken
         GovernanceToken token = new GovernanceToken(
             teamAddress,
             treasuryAddress,
@@ -34,13 +32,12 @@ contract DeployPart1 is Script {
         console.log("Address:", address(token));
         console.log("Total supply:", token.totalSupply());
 
-        // 2. Разворачиваем TokenVesting
         TokenVesting vesting = new TokenVesting(
             teamAddress,
             address(token),
             block.timestamp,
-            0,           // без клифа
-            365 days     // 12 месяцев
+            0,          
+            365 days    
         );
 
         console.log("\n=== TokenVesting deployed ===");
@@ -50,7 +47,6 @@ contract DeployPart1 is Script {
 
         vm.stopBroadcast();
 
-        // Вывод распределения
         console.log("\n=== Token Distribution ===");
         console.log("Team (direct):", token.balanceOf(teamAddress));
         console.log("Treasury:", token.balanceOf(treasuryAddress));
